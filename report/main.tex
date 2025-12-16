@@ -7,6 +7,8 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
+\sloppy
+
 \begin{document}
 
 \title{Weekly NFL Fantasy Football Point Forecasting Using Gradient Boosting Models}
@@ -21,7 +23,7 @@ Hoboken, New Jersey}
 \maketitle
 
 \begin{abstract}
-Fantasy football forecasting is challenging due to high week-to-week variance in player performance and limited historical data. This project develops an end-to-end machine learning pipeline to predict weekly fantasy points using NFL play-by-play data from 2009 to 2016. We compute weekly fantasy scores directly from play-by-play statistics using Half-PPR scoring and engineer 51 time-aware features including lag variables, rolling windows, and season-to-date aggregates. Three regression models—Ridge, Random Forest, and Gradient Boosting—are evaluated using time-based splits to prevent temporal leakage. The best model, Histogram Gradient Boosting, achieves a test set MAE of 2.62 fantasy points and explains 72.6\% of variance, representing a 45\% improvement over rolling average baselines. Performance varies by position: wide receivers are most predictable (MAE=2.02) while quarterbacks show higher volatility (MAE=4.28). Results show that engineered time-series features substantially improve forecast accuracy compared to naive historical averages.
+Fantasy football forecasting is challenging due to high week-to-week variance in player performance and limited historical data. This project develops an end-to-end machine learning pipeline to predict weekly fantasy points using NFL play-by-play data from 2009 to 2016. We compute weekly fantasy scores directly from play-by-play statistics using Half-PPR scoring and engineer 51 time-aware features including lag variables, rolling windows, and season-to-date aggregates. Three regression models—Ridge, Random Forest, and Gradient Boosting—are evaluated using time-based splits to prevent temporal leakage. The best model, Histogram Gradient Boosting, achieves a test set MAE of 2.62 fantasy points and explains 72.6\% of variance, representing a 45\% improvement over rolling average baselines. Performance varies by position: wide receivers are most predictable (MAE=2.02) while quarterbacks show higher volatility (MAE=4.28). Results illustrate that engineered time-series features substantially improve forecast accuracy compared to naive historical averages in this setting.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -32,7 +34,7 @@ fantasy football, time-series forecasting, gradient boosting, feature engineerin
 
 Fantasy football is a game where participants assemble virtual teams of real NFL players and earn points based on actual player performance. Accurate weekly point forecasting is valuable for lineup decisions, player valuation, and understanding performance drivers. Unlike season-long aggregates, weekly prediction is substantially more difficult due to game-specific factors such as opponent matchups, injury status, weather, and unpredictable variance in individual game outcomes.
 
-Traditional fantasy forecasting relies on expert rankings, season-long averages, or simple heuristics like "last week's performance." These approaches fail to capture recent trends, position-specific patterns, or interactions between player usage and efficiency metrics. Machine learning offers a data-driven alternative that can model complex nonlinear relationships in historical performance data.
+Traditional fantasy forecasting relies on expert rankings, season-long averages, or simple heuristics like ``last week's performance." These approaches fail to capture recent trends, position-specific patterns, or interactions between player usage and efficiency metrics. Machine learning offers a data-driven alternative that can model complex nonlinear relationships in historical performance data.
 
 This project addresses the question: \textit{can machine learning models trained on historical play-by-play data predict weekly fantasy points more accurately than simple baseline methods?} We approach this as a supervised regression problem with careful attention to temporal integrity—all features use only past information to ensure realistic forecasting conditions.
 
@@ -54,11 +56,11 @@ Our work builds on these foundations by combining gradient boosting with careful
 
 \subsection{Data Sources}
 
-We use the NFL Play-by-Play dataset (2009-2016) from Kaggle \cite{kaggle_pbp}, which contains 362,447 individual plays with player identifiers, game context, and outcome statistics. The dataset includes all regular season and playoff games across eight seasons.
+We use the NFL Play-by-Play dataset (2009-2016) from Kaggle \cite{kaggle_pbp}, which contains 362,447 total plays across all game situations. The dataset includes regular season and playoff games spanning eight seasons.
 
-For this analysis, we filter to regular season weeks 1-17, yielding 248,681 fantasy-relevant plays (passes, runs, and sacks). Each play includes detailed information: player names and IDs, yards gained, touchdowns, interceptions, fumbles, and reception indicators.
+For this analysis, we filter to fantasy-relevant plays occurring in regular season weeks 1-17, specifically passes, rushes, and sacks that contribute to fantasy scoring. This filtering yields 248,681 plays (71.4\% of the original dataset). Each play includes detailed information: player names and IDs, yards gained, touchdowns, interceptions, fumbles, and reception indicators.
 
-We compute weekly fantasy points using Half-PPR (point-per-reception) scoring:
+We compute weekly fantasy points using Half-PPR (half point-per-reception) scoring, a widely adopted standard in fantasy football that balances pure yardage with reception volume:
 \begin{itemize}
     \item \textbf{Passing:} 0.04 pts/yard, 4 pts/TD, -2 pts/INT
     \item \textbf{Rushing:} 0.1 pts/yard, 6 pts/TD, -2 pts/fumble lost
@@ -140,7 +142,7 @@ We assess models using three standard regression metrics:
 
 Additionally, we analyze performance separately by position (QB, RB, WR/TE) since prediction difficulty varies across positions due to different scoring distributions and variance levels.
 
-\subsection{Implementation Details}
+\subsection{Implementation and Reproducibility}
 
 All models were implemented in Python 3.8+ using scikit-learn 1.0 \cite{sklearn}. Data processing utilized pandas and NumPy for efficient array operations. The complete pipeline—from raw play-by-play data to final predictions—is fully reproducible with a fixed random seed (42) for all stochastic operations including train/validation splits and hyperparameter search.
 
@@ -148,7 +150,7 @@ Histogram Gradient Boosting was selected as the primary model due to its native 
 
 For Ridge Regression, we standardized features to zero mean and unit variance to ensure the L2 penalty operates on comparable scales. Tree-based models (Random Forest and Gradient Boosting) do not require standardization and were trained on raw feature values.
 
-The complete analysis executes in approximately 8 minutes on a standard laptop (Intel i5, 16GB RAM), making the pipeline practical for iterative experimentation. All trained models, predictions, and evaluation metrics are saved as artifacts for reproducibility verification.
+The complete analysis executes in approximately 8 minutes on a standard laptop (Intel i5, 16GB RAM), making the pipeline practical for iterative experimentation. All trained models, predictions, and evaluation metrics are saved as artifacts (joblib models, CSV predictions, and performance metrics) to enable result verification and future extensions.
 
 \section{Results}
 
@@ -180,7 +182,7 @@ All three machine learning models substantially outperform the baseline forecast
 
 Random Forest performs nearly as well as Gradient Boosting, with only a 2.6\% higher MAE. Ridge Regression, while still outperforming baselines, shows weaker performance due to its inability to capture nonlinear interactions between features.
 
-The negative R² for the "Last Week" baseline indicates that naively predicting next week equals last week performs worse than simply predicting the overall mean. This underscores the importance of temporal smoothing in fantasy forecasting.
+The negative R² for the ``Last Week" baseline indicates that naively predicting next week equals last week performs worse than simply predicting the overall mean. This underscores the importance of temporal smoothing in fantasy forecasting.
 
 \subsection{Performance by Position}
 
@@ -202,7 +204,7 @@ QB & 4.28 & 0.555 & 573 \\
 \end{center}
 \end{table}
 
-Wide receivers and tight ends show the lowest prediction error (MAE=2.02 points) and highest explained variance (R²=0.77). This is likely due to their more consistent week-to-week target shares and usage patterns within offensive schemes.
+Wide receivers and tight ends illustrate the lowest prediction error (MAE=2.02 points) and highest explained variance (R²=0.77). This is likely due to their more consistent week-to-week target shares and usage patterns within offensive schemes.
 
 Quarterbacks are the most difficult to predict (MAE=4.28), despite having lower overall scoring variance than running backs. This suggests that QB performance is driven more by game-specific factors not captured in our feature set, such as opponent defensive strength, game script (teams trailing throw more), and red zone touchdown variance.
 
@@ -213,23 +215,21 @@ Running backs fall between these extremes, with moderate prediction difficulty. 
 Fig. \ref{fig:feature_importance} shows the top 10 most important features based on permutation importance analysis with the Gradient Boosting model. The model strongly prioritizes recent performance history.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=0.48\textwidth]{../artifacts/visuals/feature_importance_gb.png}}
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/feature_importance_gb.png}}
 \caption{Top 10 feature importances for Gradient Boosting model. Recent rolling averages dominate predictive signal.}
 \label{fig:feature_importance}
 \end{figure}
 
 The 5-week rolling average of fantasy points is by far the most important feature, followed by season-to-date average and 3-week rolling average. This pattern indicates that sustained recent performance is more informative than single-week statistics or raw volume metrics.
 
-Interestingly, position-specific features (passing touchdowns for QBs, rushing yards for RBs, targets for receivers) appear later in the importance ranking. This suggests the model learns to combine multiple usage and efficiency signals rather than relying on single statistics.
-
-The dominance of rolling averages aligns with intuition—players on "hot streaks" or showing consistent production are more likely to continue performing well than players with isolated good or bad weeks. This also explains why the 5-week rolling average baseline performs reasonably well compared to the "last week" baseline.
+Interestingly, position-specific features (passing touchdowns for QBs, rushing yards for RBs, targets for receivers) appear later in the importance ranking, suggesting the model learns to combine multiple usage and efficiency signals rather than relying on single statistics.
 
 \subsection{Model Predictions vs. Actual Performance}
 
 Fig. \ref{fig:pred_vs_actual} shows a scatter plot of predicted versus actual fantasy points for the test set. The Gradient Boosting model shows good calibration across the scoring range, with tighter clustering for low-to-moderate scores and increased spread for high-scoring weeks.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=0.48\textwidth]{../artifacts/visuals/pred_vs_actual_scatter.png}}
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/pred_vs_actual_scatter.png}}
 \caption{Predicted vs. actual fantasy points on 2016 test set. Each point represents one player-week observation.}
 \label{fig:pred_vs_actual}
 \end{figure}
@@ -241,7 +241,7 @@ The model tends to underpredict extreme high-scoring weeks (30+ points) and slig
 Fig. \ref{fig:baseline_comparison} visualizes the MAE improvement of machine learning models over baseline methods. All three ML approaches achieve substantial error reduction.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=0.48\textwidth]{../artifacts/visuals/baseline_vs_models_mae.png}}
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/baseline_vs_models_mae.png}}
 \caption{Mean absolute error comparison between models and baselines. Lower is better.}
 \label{fig:baseline_comparison}
 \end{figure}
@@ -250,21 +250,31 @@ The gap between Ridge Regression and tree-based models (Random Forest, Gradient 
 
 \subsection{Player-Level Case Studies}
 
-To illustrate model behavior at the individual player level, we examine weekly predictions for three selected players from the 2016 test set: quarterbacks Aaron Rodgers and Drew Brees, and rookie running back Ezekiel Elliott.
-
-Fig. \ref{fig:player_examples} shows weekly time-series for these players. The model tracks sustained performance trends reasonably well but struggles with week-to-week volatility and extreme outcomes.
+To illustrate model behavior at the individual player level, we examine weekly predictions for three selected players from the 2016 test set: quarterbacks Aaron Rodgers and Drew Brees, and rookie running back Ezekiel Elliott. Figs. \ref{fig:arodgers}--\ref{fig:eelliott} show weekly time-series for each player.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=0.48\textwidth]{../artifacts/visuals/player_arodgers_pred_vs_actual.png}}
-\caption{Aaron Rodgers weekly predictions vs. actual. Model MAE: 6.55 points.}
-\label{fig:player_examples}
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/player_arodgers_pred_vs_actual.png}}
+\caption{Aaron Rodgers weekly predictions vs. actual (2016). Model MAE: 6.55 points.}
+\label{fig:arodgers}
 \end{figure}
 
-Aaron Rodgers' weekly performance demonstrates typical QB volatility—large swings between 10-point and 35-point games. The model captures his average scoring level well but cannot anticipate extreme boom or bust weeks driven by opponent-specific factors or fluky touchdown variance.
+Aaron Rodgers' weekly performance (Fig. \ref{fig:arodgers}) demonstrates typical QB volatility—large swings between 10-point and 35-point games. The model captures his average scoring level well but cannot anticipate extreme boom or bust weeks driven by opponent-specific factors or fluky touchdown variance.
 
-Drew Brees shows a similar pattern with slightly higher prediction error (MAE=7.27). Both veteran quarterbacks exhibit consistent seasonal averages but unpredictable week-to-week fluctuations.
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/player_dbrees_pred_vs_actual.png}}
+\caption{Drew Brees weekly predictions vs. actual (2016). Model MAE: 7.27 points.}
+\label{fig:dbrees}
+\end{figure}
 
-Ezekiel Elliott, as a rookie in 2016, presents a cold-start challenge—the model has no historical data for this player. Despite this limitation, the model achieves moderate accuracy (MAE=7.73) by relying on positional priors and Elliott's high-volume usage. However, predictions are less confident than for established veterans with multi-season track records.
+Drew Brees (Fig. \ref{fig:dbrees}) shows a similar pattern with slightly higher prediction error. Both veteran quarterbacks exhibit consistent seasonal averages but unpredictable week-to-week fluctuations.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=0.45\textwidth]{../artifacts/visuals/player_eelliott_pred_vs_actual.png}}
+\caption{Ezekiel Elliott weekly predictions vs. actual (2016). Model MAE: 7.73 points.}
+\label{fig:eelliott}
+\end{figure}
+
+Ezekiel Elliott (Fig. \ref{fig:eelliott}), as a rookie in 2016, presents a cold-start challenge—the model has no historical data for this player. Despite this limitation, the model achieves moderate accuracy by relying on positional priors and Elliott's high-volume usage. However, predictions are less confident than for established veterans with multi-season track records.
 
 These examples underscore both the model's strengths (capturing sustained trends) and its limitations (unpredictability of single-game outcomes, especially for QBs and rookies).
 
@@ -274,13 +284,11 @@ These examples underscore both the model's strengths (capturing sustained trends
 
 Machine learning models trained on engineered time-series features substantially improve weekly fantasy point forecasting compared to naive historical averages. The Gradient Boosting approach achieves a 45\% reduction in prediction error over the best baseline, with particularly strong performance for wide receivers and tight ends.
 
-The dominance of rolling average features in importance rankings reveals that recent form matters more than instantaneous statistics. This pattern suggests that player performance exhibits short-term autocorrelation—recent trends persist more reliably than week-to-week fluctuations would suggest. The 5-week rolling average balances recency with stability, capturing sustained production without overreacting to single-game outliers.
-
-Interestingly, raw volume metrics (attempts, targets, touches) appear less important than aggregated scoring statistics. This indicates the model learns that consistency in fantasy output matters more than usage alone. A player with 20 touches averaging 8 points per game is more predictable than a player with highly variable usage.
+The dominance of rolling average features in importance rankings reveals that recent form matters more than instantaneous statistics, suggesting player performance exhibits short-term autocorrelation. Raw volume metrics (attempts, targets, touches) appear less important than aggregated scoring statistics, indicating the model learns that consistency in fantasy output matters more than usage alone.
 
 Position-specific prediction difficulty reveals structural differences in scoring patterns. Quarterbacks show higher variance despite having defined roles, likely because passing touchdowns are more variable than rushing production and depend heavily on red zone efficiency and opponent quality. Wide receivers benefit from target share stability within offensive systems, making week-to-week production more consistent even if absolute yardage fluctuates.
 
-The 72.6\% variance explained by the best model represents a strong result for sports forecasting, though the remaining unexplained variance highlights the inherent unpredictability of game outcomes. Factors like defensive matchups, game script, weather, and random touchdown variance contribute to this irreducible uncertainty.
+The 72.6\% variance explained by the best model represents a strong result in this setting, though the remaining unexplained variance highlights the inherent unpredictability of game outcomes. Factors like defensive matchups, game script, weather, and random touchdown variance contribute to this irreducible uncertainty.
 
 \subsection{Limitations}
 
@@ -308,9 +316,9 @@ Several extensions could improve forecast accuracy:
 
 \section{Conclusion}
 
-This project presents an end-to-end pipeline for weekly NFL fantasy point forecasting using machine learning. By transforming raw play-by-play data into forecasting-ready features with strict temporal ordering, we show that Gradient Boosting models achieve meaningful improvements over baseline methods.
+This project presents an end-to-end pipeline for weekly NFL fantasy point forecasting using machine learning. By transforming raw play-by-play data into forecasting-ready features with strict temporal ordering, we illustrate that Gradient Boosting models achieve meaningful improvements over baseline methods.
 
-Feature importance analysis reveals that recent performance history dominates prediction, while position-specific analysis highlights varying difficulty across player roles. Wide receivers and tight ends are most predictable due to stable target shares, whereas quarterbacks show higher variance from game-to-game scoring fluctuations.
+Feature importance analysis reveals that recent performance history dominates prediction, while position-specific analysis highlights varying difficulty across player roles. Wide receivers and tight ends are most predictable due to stable target shares, whereas quarterbacks show higher variance.
 
 Challenges remain, particularly for quarterbacks, rookies, and extreme scoring outcomes. The unexplained variance suggests that matchup-specific factors and game context play important roles that historical features alone cannot capture. Nevertheless, this work demonstrates the practical value of engineered time-series features in sports prediction tasks, and the evaluation protocols developed here could extend to other fantasy sports and player performance forecasting applications.
 
